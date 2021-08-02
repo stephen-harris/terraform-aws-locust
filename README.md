@@ -6,7 +6,7 @@ A terraform module that will create a master & worker nodes, install Locust and 
 
 ```
 module "locust" {
-  source = "github.com/stephenharris/terraform-aws-locust"
+  source = "github.com/stephen-harris/terraform-aws-locust"
   name    = "locust-demo-"
   node_ami = "ami-00890f614e48ce866"
   vpc_id  = "vpc-5678abcd"
