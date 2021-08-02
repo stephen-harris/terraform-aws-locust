@@ -70,7 +70,7 @@ resource "aws_instance" "worker" {
 
   network_interface {
     device_index         = 0
-    network_interface_id = aws_network_interface.slave_public_network_interface[count.index].id
+    network_interface_id = aws_network_interface.worker_public_network_interface[count.index].id
   }
 
 
@@ -78,7 +78,7 @@ resource "aws_instance" "worker" {
     for_each = var.use_private_ip ? [1] : []
     content {
       device_index         = 1
-      network_interface_id = aws_network_interface.slave_private_network_interface[count.index].id
+      network_interface_id = aws_network_interface.worker_private_network_interface[count.index].id
     }
   }
 
@@ -101,7 +101,7 @@ resource "aws_instance" "worker" {
   }
 
   provisioner "remote-exec" {
-    inline = var.use_private_ip ? concat(local.configure_private_network, local.install_locust_slave) : local.install_locust_slave
+    inline = var.use_private_ip ? concat(local.configure_private_network, local.install_locust_worker) : local.install_locust_worker
   }
 
   connection {

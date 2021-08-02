@@ -10,8 +10,8 @@ locals {
     "sudo python3 -m pip install locust && sudo python3 -m pip install pyzmq supervisor",
     "sudo /usr/local/bin/supervisord"
   ]
-  install_locust_slave = [
-    "echo \"command=/usr/local/bin/locust -f /home/ec2-user/locustfile.py --host=${var.host} --slave --master-host=${aws_instance.master.private_ip}\" >> supervisord.conf",
+  install_locust_worker = [
+    "echo \"command=/usr/local/bin/locust -f /home/ec2-user/locustfile.py --host=${var.host} --worker --master-host=${aws_instance.master.private_ip}\" >> supervisord.conf",
     "sudo mv supervisord.conf /etc/supervisord.conf",
     "sudo yum -y install gcc python36 python36-virtualenv python36-dev python36-pip python-meld3",
     "sudo python3 -m pip install --upgrade pip",
