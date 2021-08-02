@@ -12,10 +12,10 @@ resource "aws_security_group" "nodes" {
   }
 
   ingress {
-    from_port   = 5557
-    to_port     = 5558
-    protocol    = "tcp"
-    self = true
+    from_port = 5557
+    to_port   = 5558
+    protocol  = "tcp"
+    self      = true
   }
 
 
