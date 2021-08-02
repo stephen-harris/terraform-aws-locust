@@ -1,5 +1,5 @@
 output "locust_dashboard" {
-  value = "http://${aws_instance.master.public_ip}:8089"
+  value = "http://${var.use_private_ip ? aws_instance.master.private_ip : aws_instance.master.public_ip}:8089"
 }
 
 output "private_key" {
@@ -7,9 +7,9 @@ output "private_key" {
 }
 
 output "master_ip" {
-  value = aws_instance.master.public_ip
+  value = var.use_private_ip ? aws_instance.master.private_ip : aws_instance.master.public_ip
 }
 
 output "worker_ips" {
-  value = aws_instance.worker.*.public_ip
+  value = var.use_private_ip ? aws_instance.worker.*.private_ip : aws_instance.worker.*.public_ip
 }
