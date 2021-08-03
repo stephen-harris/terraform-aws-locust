@@ -56,8 +56,8 @@ variable "private_subnet_id" {
   default     = ""
 }
 
-variable "nat_default_gw" {
+variable "private_subnet_default_gw" {
   type        = string
-  description = "NAT default gateway. Required only if `use_private_ip` is true"
+  description = "Default gateway of the private subnet. Required only if `use_private_ip` is true"
   default     = ""
 }

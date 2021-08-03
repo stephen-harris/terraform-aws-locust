@@ -1,7 +1,7 @@
 locals {
   configure_private_network = [
-    "sudo ip route add 10.0.0.0/8 via ${var.nat_default_gw} dev eth0", //todo: make DEFAULT_GW configurable
-    "sudo ip route delete default via ${var.nat_default_gw} dev eth0",
+    "sudo ip route add 10.0.0.0/8 via ${var.private_subnet_default_gw} dev eth0", //todo: make DEFAULT_GW configurable
+    "sudo ip route delete default via ${var.private_subnet_default_gw} dev eth0",
   ]
   install_locust_master = ["echo \"command=/usr/local/bin/locust -f /home/ec2-user/locustfile.py --host=${var.host} --master\" >> supervisord.conf",
     "sudo mv supervisord.conf /etc/supervisord.conf",
