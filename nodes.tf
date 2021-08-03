@@ -19,14 +19,14 @@ resource "aws_instance" "master" {
 
 
   network_interface {
-    device_index         = 0
+    device_index         = var.use_private_ip ? 1 : 0
     network_interface_id = aws_network_interface.master_public_network_interface.id
   }
 
   dynamic "network_interface" {
     for_each = var.use_private_ip ? [1] : []
     content {
-      device_index         = 1
+      device_index         = 0
       network_interface_id = aws_network_interface.master_private_network_interface[0].id
     }
   }
@@ -69,7 +69,7 @@ resource "aws_instance" "worker" {
 
 
   network_interface {
-    device_index         = 0
+    device_index         = var.use_private_ip ? 1 : 0
     network_interface_id = aws_network_interface.worker_public_network_interface[count.index].id
   }
 
@@ -77,7 +77,7 @@ resource "aws_instance" "worker" {
   dynamic "network_interface" {
     for_each = var.use_private_ip ? [1] : []
     content {
-      device_index         = 1
+      device_index         = 0
       network_interface_id = aws_network_interface.worker_private_network_interface[count.index].id
     }
   }

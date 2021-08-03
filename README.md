@@ -55,7 +55,7 @@ The following arguments are supported:
 - ``number_of_workers`` - (Optional) Number of worker instances used. Defaults 1
 - ``ingress_cidr`` - (Optional) List of IPs that can access your dashboard. Deafults ["0.0.0.0/0"].
 - ``use_private_ip`` - (Optional)
-- ``private_subnet_id`` - (Required if use_private_ip)
+- ``private_subnet_id`` - (Required if use_private_ip) The private subnet ID that will be used as primary.
 - ``nat_default_gw`` - (Required if use_private_ip)
 
 ## Attribute Reference
