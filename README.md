@@ -4,18 +4,38 @@ A terraform module that will create a master & worker nodes, install Locust and 
 
 ## Usage
 
+### Public subnet
 ```
 module "locust" {
-  source = "github.com/stephenharris/terraform-aws-locust"
+  source = "github.com/stephen-harris/terraform-aws-locust"
   name    = "locust-demo-"
   node_ami = "ami-00890f614e48ce866"
   vpc_id  = "vpc-5678abcd"
-  subnet_id = "subnet-1234abcde"
+  public_subnet_id = "subnet-1234abcde"
   worker_instance_type = "t2.micro"
   host = "https://yoursite.com"
   number_of_workers = 2
   scripts_folder = "./path/to/locust/scripts"
   ingress_cidr = ["0.0.0.0/0"]
+}
+```
+
+## Private + Public subnet
+```
+module "locust" {
+  source = "github.com/stephen-harris/terraform-aws-locust"
+  name    = "locust-demo-"
+  node_ami = "ami-00890f614e48ce866"
+  vpc_id  = "vpc-5678abcd"
+  public_subnet_id = "subnet-1234abcde"
+  worker_instance_type = "t2.micro"
+  host = "https://yoursite.com"
+  number_of_workers = 2
+  scripts_folder = "./path/to/locust/scripts"
+  ingress_cidr = ["0.0.0.0/0"]
+  use_private_ip       = true
+  private_subnet_id    = "subnet-0e9f15b887290cbdc"
+  nat_default_gw       = "12.34.56.78"
 }
 ```
 
@@ -29,11 +49,14 @@ The following arguments are supported:
 - ``host`` - (Required) The target you are load testing
 - ``scripts_folder`` - (Required) Path to locust scripts. Must contain locustfile.py.
 - ``vpc_id`` - (Required) The VPC ID the nodes will be created.
-- ``subnet_id`` - (Required) The subnet ID where the nodes will be created.
+- ``public_subnet_id`` - (Required) The public subnet ID where the nodes will be created.
 - ``node_ami`` - The image ID used for worker instances
 - ``worker_instance_type`` - (Optional) EC2 type for the worker instances. Defaults "t2.micro"
 - ``number_of_workers`` - (Optional) Number of worker instances used. Defaults 1
 - ``ingress_cidr`` - (Optional) List of IPs that can access your dashboard. Deafults ["0.0.0.0/0"].
+- ``use_private_ip`` - (Optional)
+- ``private_subnet_id`` - (Required if use_private_ip) The private subnet ID that will be used as primary.
+- ``nat_default_gw`` - (Required if use_private_ip)
 
 ## Attribute Reference
 
@@ -67,7 +90,7 @@ module "locust" {
   name    = "locust-demo-"
   node_ami = "ami-00890f614e48ce866"
   vpc_id  = module.networking.vpc_id
-  subnet_id = module.networking.public_subnets[0]
+  public_subnet_id = module.networking.public_subnets[0]
   worker_instance_type = "t2.micro"
   host = "https://example.com"
   number_of_workers = 2

@@ -1,4 +1,3 @@
-
 resource "aws_key_pair" "deployer" {
   key_name   = "${var.name}-${timestamp()}-key"
   public_key = tls_private_key.temp.public_key_openssh
@@ -14,11 +13,23 @@ resource "tls_private_key" "temp" {
 }
 
 resource "aws_instance" "master" {
-  ami                    = var.node_ami
-  instance_type          = "t2.micro"
-  key_name               = aws_key_pair.deployer.key_name
-  vpc_security_group_ids = ["${aws_security_group.nodes.id}"]
-  subnet_id              = var.subnet_id
+  ami           = var.node_ami
+  instance_type = "t2.micro"
+  key_name      = aws_key_pair.deployer.key_name
+
+
+  network_interface {
+    device_index         = var.use_private_ip ? 1 : 0
+    network_interface_id = aws_network_interface.master_public_network_interface.id
+  }
+
+  dynamic "network_interface" {
+    for_each = var.use_private_ip ? [1] : []
+    content {
+      device_index         = 0
+      network_interface_id = aws_network_interface.master_private_network_interface[0].id
+    }
+  }
 
   tags = {
     Name = "${var.name}-master"
@@ -39,19 +50,11 @@ resource "aws_instance" "master" {
   }
 
   provisioner "remote-exec" {
-    inline = [
-      "echo \"command=/usr/local/bin/locust -f /home/ec2-user/locustfile.py --host=${var.host} --master\" >> supervisord.conf",
-      "sudo mv supervisord.conf /etc/supervisord.conf",
-      "sudo yum -y install gcc python36 python36-virtualenv python36-dev python36-pip",
-      "sudo python3 -m pip install --upgrade pip",
-      "sudo python3 -m pip install locust && sudo python3 -m pip install pyzmq",
-      "wget https://pypi.python.org/packages/80/37/964c0d53cbd328796b1aeb7abea4c0f7b0e8c7197ea9b0b9967b7d004def/supervisor-3.3.1.tar.gz && tar -xvf supervisor*.gz && cd supervisor* && sudo python setup.py install && sudo pip install supervisor",
-      "sudo /usr/local/bin/supervisord",
-    ]
+    inline = var.use_private_ip ? concat(local.configure_private_network, local.install_locust_master) : local.install_locust_master
   }
 
   connection {
-    host        = self.public_ip
+    host        = var.use_private_ip ? self.private_ip : self.public_ip
     type        = "ssh"
     user        = "ec2-user"
     private_key = tls_private_key.temp.private_key_pem
@@ -59,12 +62,25 @@ resource "aws_instance" "master" {
 }
 
 resource "aws_instance" "worker" {
-  count                  = var.number_of_workers
-  ami                    = var.node_ami
-  instance_type          = var.worker_instance_type
-  key_name               = aws_key_pair.deployer.key_name
-  vpc_security_group_ids = [aws_security_group.nodes.id]
-  subnet_id              = var.subnet_id
+  count         = var.number_of_workers
+  ami           = var.node_ami
+  instance_type = var.worker_instance_type
+  key_name      = aws_key_pair.deployer.key_name
+
+
+  network_interface {
+    device_index         = var.use_private_ip ? 1 : 0
+    network_interface_id = aws_network_interface.worker_public_network_interface[count.index].id
+  }
+
+
+  dynamic "network_interface" {
+    for_each = var.use_private_ip ? [1] : []
+    content {
+      device_index         = 0
+      network_interface_id = aws_network_interface.worker_private_network_interface[count.index].id
+    }
+  }
 
   tags = {
     Name = "${var.name}-worker"
@@ -85,19 +101,11 @@ resource "aws_instance" "worker" {
   }
 
   provisioner "remote-exec" {
-    inline = [
-      "echo \"command=/usr/local/bin/locust -f /home/ec2-user/locustfile.py --host=${var.host} --slave --master-host=${aws_instance.master.private_ip}\" >> supervisord.conf",
-      "sudo mv supervisord.conf /etc/supervisord.conf",
-      "sudo yum -y install gcc python36 python36-virtualenv python36-dev python36-pip",
-      "sudo python3 -m pip install --upgrade pip",
-      "sudo python36 -m pip install locust && sudo python36 -m pip install pyzmq",
-      "wget https://pypi.python.org/packages/80/37/964c0d53cbd328796b1aeb7abea4c0f7b0e8c7197ea9b0b9967b7d004def/supervisor-3.3.1.tar.gz && tar -xvf supervisor*.gz && cd supervisor* && sudo python setup.py install && sudo pip install supervisor",
-      "sudo /usr/local/bin/supervisord",
-    ]
+    inline = var.use_private_ip ? concat(local.configure_private_network, local.install_locust_worker) : local.install_locust_worker
   }
 
   connection {
-    host        = self.public_ip
+    host        = var.use_private_ip ? self.private_ip : self.public_ip
     type        = "ssh"
     user        = "ec2-user"
     private_key = tls_private_key.temp.private_key_pem
